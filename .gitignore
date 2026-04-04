@@ -1,0 +1,53 @@
+# Environment / secrets
+.env
+.env.*
+*.env
+.venv/
+venv/
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# Logs / databases
+*.log
+*.sqlite3
+
+# Vector DB (recreated at runtime)
+vector_db/
+vector_db1/
+chroma_db/
+
+# Project-generated data
+data/uploads/
+data/tmp/
+data/cache/
+
+# Streamlit
+.streamlit/
+
+# Local helper files
+commands.txt
+
+# Documentation / binaries not for repo
+*.md
+*.pdf
+*.docx
+*.pptx
+*.xlsx

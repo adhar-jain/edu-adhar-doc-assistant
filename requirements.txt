@@ -1,0 +1,16 @@
+streamlit
+langchain
+langchain-community
+langchain-google-genai
+langchain_openai
+langchain-chroma
+langchain-huggingface
+chromadb
+pandas
+pypdf
+python-dotenv
+tiktoken
+google-generativeai
+langgraph
+openpyxl
+sentence-transformers

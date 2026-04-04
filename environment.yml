@@ -1,0 +1,25 @@
+name: genai-agent-doc-system
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.10
+  - pip
+
+  - pip:
+      - streamlit
+      - langchain
+      - langchain-community
+      - langchain-chroma
+      - langchain-google-genai
+      - langchain-openai
+      - langgraph
+      - chromadb
+      - pandas
+      - pypdf
+      - openpyxl
+      - python-dotenv
+      - tiktoken
+      - google-generativeai
