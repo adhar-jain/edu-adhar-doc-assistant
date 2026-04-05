@@ -25,3 +25,4 @@ dependencies:
       - google-generativeai
       - langchain-huggingface
       - sentence-transformers
+      - torchvision
