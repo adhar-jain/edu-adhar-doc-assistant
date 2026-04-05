@@ -3,11 +3,14 @@ name: genai-agent-doc-system
 channels:
   - conda-forge
   - defaults
+  - pytorch
 
 dependencies:
   - python=3.10
   - pip
-
+  - pytorch
+  - torchvision
+  - cpuonly
   - pip:
       - streamlit
       - langchain
@@ -25,4 +28,3 @@ dependencies:
       - google-generativeai
       - langchain-huggingface
       - sentence-transformers
-      - torchvision

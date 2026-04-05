@@ -45,7 +45,7 @@ if "embeddings_provider" not in st.session_state:
 # Provider selection with cards
 st.subheader("🧠 Choose Your Embeddings Provider")
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 
 with col1:
     if st.button("🤗 HuggingFace\nFree & Local\nNo API quota", key="hf"):
@@ -71,19 +71,6 @@ with col2:
             else:
                 st.info("📁 Switched to Gemini")
     if st.session_state.embeddings_provider == "gemini":
-        st.success("✅ Currently Selected")
-
-with col3:
-    if st.button("💬 OpenAI\nPremium Quality\nRequires API key", key="openai"):
-        if st.session_state.embeddings_provider != "openai":
-            st.session_state.embeddings_provider = "openai"
-            # Clear vector DB when switching
-            if os.path.exists("./vector_db"):
-                shutil.rmtree("./vector_db")
-                st.success("🗑️ Switched to OpenAI - Vector DB cleared")
-            else:
-                st.info("📁 Switched to OpenAI")
-    if st.session_state.embeddings_provider == "openai":
         st.success("✅ Currently Selected")
 
 # Update environment variable
