@@ -23,3 +23,5 @@ dependencies:
       - python-dotenv
       - tiktoken
       - google-generativeai
+      - langchain-huggingface
+      - sentence-transformers
