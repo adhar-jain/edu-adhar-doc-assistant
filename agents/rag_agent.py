@@ -6,6 +6,7 @@ LangGraph-based RAG agent with conversation memory.
 
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
+from llm.response_utils import extract_text_content
 
 
 class AgentState(TypedDict):
@@ -30,7 +31,11 @@ def rewrite_query(state, llm):
 
     response = llm.invoke(prompt)
 
-    return {"rewritten_question": response.content}
+    rewritten_question = extract_text_content(response.content).strip()
+    if not rewritten_question:
+        raise ValueError("The model returned no text for the rewritten question.")
+
+    return {"rewritten_question": rewritten_question}
 
 
 def retrieve(state, retriever):
@@ -68,7 +73,11 @@ def reason(state, llm):
 
     response = llm.invoke(prompt)
 
-    return {"answer": response.content}
+    answer = extract_text_content(response.content).strip()
+    if not answer:
+        raise ValueError("The model returned no text for the answer.")
+
+    return {"answer": answer}
 
 
 def build_rag_agent(llm, retriever):

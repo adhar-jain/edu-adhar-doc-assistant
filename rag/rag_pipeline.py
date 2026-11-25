@@ -21,6 +21,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from rag.vectordb import create_vector_store
 from llm.llm_factory import LLMFactory
+from llm.response_utils import extract_text_content
 
 def build_retriever(chunks):
 
@@ -52,4 +53,8 @@ def ask_question(retriever, question):
 
     response = llm.invoke(prompt)
 
-    return response.content
+    answer = extract_text_content(response.content).strip()
+    if not answer:
+        raise ValueError("The model returned no text for the answer.")
+
+    return answer

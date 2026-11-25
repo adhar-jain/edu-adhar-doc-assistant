@@ -35,6 +35,7 @@ from utils.config import (
     UPLOADS_DIR,
     VECTOR_DB_DIR,
 )
+from llm.response_utils import extract_text_content
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 APP_LOG_PATH = os.path.join(LOG_DIR, "answer_errors.log")
@@ -338,7 +339,14 @@ Provide a concise summary with 4-6 bullet points."""
                     text=f"Summarizing document {index} of {total_documents}: {source}",
                 )
                 st.write(f"**{source}**")
-                st.write_stream(llm.stream(prompt))
+
+                def summary_text_stream():
+                    for chunk in llm.stream(prompt):
+                        text = extract_text_content(chunk.content)
+                        if text:
+                            yield text
+
+                st.write_stream(summary_text_stream())
                 st.write("---")
                 progress.progress(
                     index / total_documents,
