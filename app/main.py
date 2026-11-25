@@ -26,6 +26,7 @@ import shutil
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
+IS_STREAMLIT_CLOUD = os.path.isdir("/mount/src")
 
 LOG_DIR = os.path.join(ROOT_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -72,55 +73,68 @@ def load_vector_store(provider):
 st.title("🤖 Adhar-Docs-Assistant")
 
 # Language model selection
-if "llm_provider" not in st.session_state:
-    st.session_state.llm_provider = DEFAULT_LLM_PROVIDER
-
-st.subheader("💬 Choose Your Language Model")
-
-col_hf_llm, col_gemini_llm = st.columns(2)
-
-with col_hf_llm:
-    if st.button("🤗 HuggingFace Local\nFree to run\nUses app server", key="llm_huggingface"):
-        load_llm.clear()
-        st.session_state.llm_provider = "huggingface"
-    if st.session_state.llm_provider == "huggingface":
-        st.success("✅ Currently Selected")
-        st.caption(
-            "Qwen2.5-1.5B-Instruct runs on the app server. Streamlit Cloud uses CPU, "
-            "not your PC's GPU, so generation may take several minutes. The first use downloads the model weights."
-        )
-
-with col_gemini_llm:
-    if st.button("🤖 Google Gemini\nCloud-Based\nUses API quota", key="llm_gemini"):
+if IS_STREAMLIT_CLOUD:
+    if st.session_state.get("llm_provider") != "gemini":
         load_llm.clear()
         st.session_state.llm_provider = "gemini"
-    if st.session_state.llm_provider == "gemini":
-        st.success("✅ Currently Selected")
+    st.subheader("💬 Language Model")
+    st.info("Streamlit Cloud has limited memory, so local models are disabled here. Gemini is used for generation.")
+else:
+    if "llm_provider" not in st.session_state:
+        st.session_state.llm_provider = DEFAULT_LLM_PROVIDER
+
+    st.subheader("💬 Choose Your Language Model")
+
+    col_hf_llm, col_gemini_llm = st.columns(2)
+
+    with col_hf_llm:
+        if st.button("🤗 HuggingFace Local\nFree to run\nUses this computer", key="llm_huggingface"):
+            load_llm.clear()
+            st.session_state.llm_provider = "huggingface"
+        if st.session_state.llm_provider == "huggingface":
+            st.success("✅ Currently Selected")
+            st.caption(
+                "Qwen2.5-1.5B-Instruct runs locally, using CUDA when available or CPU otherwise. "
+                "The first use downloads the model weights."
+            )
+
+    with col_gemini_llm:
+        if st.button("🤖 Google Gemini\nCloud-Based\nUses API quota", key="llm_gemini"):
+            load_llm.clear()
+            st.session_state.llm_provider = "gemini"
+        if st.session_state.llm_provider == "gemini":
+            st.success("✅ Currently Selected")
 
 # Initialize session state for provider selection
-if "embeddings_provider" not in st.session_state:
+if IS_STREAMLIT_CLOUD:
+    st.session_state.embeddings_provider = "gemini"
+elif "embeddings_provider" not in st.session_state:
     st.session_state.embeddings_provider = DEFAULT_EMBEDDINGS_PROVIDER
 
 # Provider selection with cards
-st.subheader("🧠 Choose Your Embeddings Provider")
+if IS_STREAMLIT_CLOUD:
+    st.subheader("🧠 Embeddings")
+    st.caption("Gemini embeddings are used on Streamlit Cloud to avoid loading a local model into limited app memory.")
+else:
+    st.subheader("🧠 Choose Your Embeddings Provider")
 
-col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-with col1:
-    if st.button("🤗 HuggingFace\nFree & Local\nNo API quota", key="hf"):
-        if st.session_state.embeddings_provider != "huggingface":
-            st.session_state.embeddings_provider = "huggingface"
-            st.info("📁 Switched to HuggingFace. Its vector index is kept separate.")
-    if st.session_state.embeddings_provider == "huggingface":
-        st.success("✅ Currently Selected")
+    with col1:
+        if st.button("🤗 HuggingFace\nFree & Local\nNo API quota", key="hf"):
+            if st.session_state.embeddings_provider != "huggingface":
+                st.session_state.embeddings_provider = "huggingface"
+                st.info("📁 Switched to HuggingFace. Its vector index is kept separate.")
+        if st.session_state.embeddings_provider == "huggingface":
+            st.success("✅ Currently Selected")
 
-with col2:
-    if st.button("🤖 Google Gemini\nCloud-Based\nRequires API key", key="gemini"):
-        if st.session_state.embeddings_provider != "gemini":
-            st.session_state.embeddings_provider = "gemini"
-            st.info("📁 Switched to Gemini. Its vector index is kept separate.")
-    if st.session_state.embeddings_provider == "gemini":
-        st.success("✅ Currently Selected")
+    with col2:
+        if st.button("🤖 Google Gemini\nCloud-Based\nRequires API key", key="gemini"):
+            if st.session_state.embeddings_provider != "gemini":
+                st.session_state.embeddings_provider = "gemini"
+                st.info("📁 Switched to Gemini. Its vector index is kept separate.")
+        if st.session_state.embeddings_provider == "gemini":
+            st.success("✅ Currently Selected")
 
 # Update environment variable
 os.environ["EMBEDDINGS_PROVIDER"] = st.session_state.embeddings_provider
