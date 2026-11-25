@@ -80,14 +80,14 @@ st.subheader("💬 Choose Your Language Model")
 col_hf_llm, col_gemini_llm = st.columns(2)
 
 with col_hf_llm:
-    if st.button("🤗 HuggingFace Local\nFree to run\nUses this computer", key="llm_huggingface"):
+    if st.button("🤗 HuggingFace Local\nFree to run\nUses app server", key="llm_huggingface"):
         load_llm.clear()
         st.session_state.llm_provider = "huggingface"
     if st.session_state.llm_provider == "huggingface":
         st.success("✅ Currently Selected")
         st.caption(
-            "Qwen2.5-1.5B-Instruct runs locally, using CUDA when available or CPU otherwise. "
-            "The first use downloads the model weights."
+            "Qwen2.5-1.5B-Instruct runs on the app server. Streamlit Cloud uses CPU, "
+            "not your PC's GPU, so generation may take several minutes. The first use downloads the model weights."
         )
 
 with col_gemini_llm:
@@ -328,7 +328,24 @@ Provide a concise summary with 4-6 bullet points."""
                     text=f"Finished document {index} of {total_documents}",
                 )
     except Exception as e:
-        st.error(f"Failed to summarize documents: {e}")
+        logger.exception("Document summarization failed")
+        error_message = str(e)
+        for key_name in ("GOOGLE_API_KEY", "OPENAI_API_KEY"):
+            secret = os.getenv(key_name)
+            if secret:
+                error_message = error_message.replace(secret, "[redacted]")
+        error_message = re.sub(r"AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}", "[redacted]", error_message)
+        details = error_message or "See the downloaded log for details."
+        st.error(f"Failed to summarize documents ({type(e).__name__}): {details}")
+        with open(APP_LOG_PATH, "rb") as log_file:
+            st.download_button(
+                "Download summary error log",
+                data=log_file.read(),
+                file_name="summary_errors.log",
+                mime="text/plain",
+                key="download_summary_error_log",
+                on_click="ignore",
+            )
 
 # -----------------------------------
 # Chat History
