@@ -17,6 +17,7 @@ import sys
 import os
 import hashlib
 import logging
+import re
 from logging.handlers import RotatingFileHandler
 import streamlit as st
 import shutil
@@ -150,7 +151,30 @@ st.markdown("---")
 # -----------------------------------
 
 # Initialize LLM
-llm = load_llm(st.session_state.llm_provider)
+try:
+    llm = load_llm(st.session_state.llm_provider)
+except Exception as e:
+    logger.exception("Language model initialization failed")
+    error_message = str(e)
+    for key_name in ("GOOGLE_API_KEY", "OPENAI_API_KEY"):
+        secret = os.getenv(key_name)
+        if secret:
+            error_message = error_message.replace(secret, "[redacted]")
+    error_message = re.sub(r"AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}", "[redacted]", error_message)
+    st.error(
+        f"Could not initialize {st.session_state.llm_provider}: "
+        f"{type(e).__name__}: {error_message}"
+    )
+    with open(APP_LOG_PATH, "rb") as log_file:
+        st.download_button(
+            "Download initialization error log",
+            data=log_file.read(),
+            file_name="answer_errors.log",
+            mime="text/plain",
+            key="download_initialization_error_log",
+            on_click="ignore",
+        )
+    st.stop()
 
 # Initialize vector database
 vector_store = load_vector_store(st.session_state.embeddings_provider)
