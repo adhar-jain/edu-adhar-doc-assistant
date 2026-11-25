@@ -16,6 +16,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from llm.embeddings_factory import EmbeddingsFactory
+from utils.config import EMBEDDINGS_PROVIDER as DEFAULT_EMBEDDINGS_PROVIDER
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,12 +25,13 @@ load_dotenv()
 class VectorStoreManager:
 
     def __init__(self):
+        provider = os.getenv("EMBEDDINGS_PROVIDER", DEFAULT_EMBEDDINGS_PROVIDER)
 
         # Use embeddings factory instead of hardcoded provider
         embeddings = EmbeddingsFactory.get_embeddings()
 
         self.vectordb = Chroma(
-            collection_name="enterprise_docs",
+            collection_name=f"enterprise_docs_{provider}",
             embedding_function=embeddings,
             persist_directory="./vector_db"
         )
@@ -50,7 +52,7 @@ class VectorStoreManager:
         # Limit to 30 chunks per upload to conserve API quota
         MAX_CHUNKS_PER_UPLOAD = 30
         if len(docs) > MAX_CHUNKS_PER_UPLOAD:
-            print(f"⚠️  Limiting {len(docs)} chunks to {MAX_CHUNKS_PER_UPLOAD} to preserve quota")
+            print(f"Limiting {len(docs)} chunks to {MAX_CHUNKS_PER_UPLOAD} to preserve quota")
             docs = docs[:MAX_CHUNKS_PER_UPLOAD]
         
         deduped_docs = []
@@ -64,10 +66,10 @@ class VectorStoreManager:
             ids.append(doc_id)
         
         if not deduped_docs:
-            print("✓ All chunks already indexed")
+            print("All chunks already indexed")
             return
         
-        print(f"📝 Indexing {len(deduped_docs)} new chunks...")
+        print(f"Indexing {len(deduped_docs)} new chunks...")
         self.vectordb.add_documents(deduped_docs, ids=ids)
 
     def get_retriever(self, k: int = 20):

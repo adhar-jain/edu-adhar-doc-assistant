@@ -13,6 +13,6 @@ class GeminiProvider:
     def create_llm():
 
         return ChatGoogleGenerativeAI(
-            model="models/gemma-3-27b-it",
+            model="gemini-3.8-flash",
             temperature=0.2,
         )
