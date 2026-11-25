@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 from pypdf import PdfReader
 
@@ -27,17 +29,18 @@ def load_excel(file_path):
 
 
 def load_document(file_path):
+    file_path = Path(file_path)
 
-    if file_path.endswith(".pdf"):
+    if file_path.suffix.lower() == ".pdf":
         return load_pdf(file_path)
 
-    elif file_path.endswith(".txt"):
+    elif file_path.suffix.lower() == ".txt":
         return load_txt(file_path)
 
-    elif file_path.endswith(".csv"):
+    elif file_path.suffix.lower() == ".csv":
         return load_csv(file_path)
 
-    elif file_path.endswith(".xlsx"):
+    elif file_path.suffix.lower() == ".xlsx":
         return load_excel(file_path)
 
     else:
