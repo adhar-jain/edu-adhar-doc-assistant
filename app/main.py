@@ -26,10 +26,17 @@ import shutil
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
-IS_STREAMLIT_CLOUD = os.path.isdir("/mount/src")
 
-LOG_DIR = os.path.join(ROOT_DIR, "logs")
-os.makedirs(LOG_DIR, exist_ok=True)
+from utils.config import (
+    EMBEDDINGS_PROVIDER as DEFAULT_EMBEDDINGS_PROVIDER,
+    IS_STREAMLIT_CLOUD,
+    LLM_PROVIDER as DEFAULT_LLM_PROVIDER,
+    LOG_DIR,
+    UPLOADS_DIR,
+    VECTOR_DB_DIR,
+)
+
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 APP_LOG_PATH = os.path.join(LOG_DIR, "answer_errors.log")
 logger = logging.getLogger("doc_assistant.answer")
 logger.setLevel(logging.ERROR)
@@ -48,10 +55,6 @@ from ingestion.chunker import chunk_document
 from vectorstore.vector_store import VectorStoreManager
 from llm.llm_factory import LLMFactory
 from agents.rag_agent import build_rag_agent
-from utils.config import (
-    EMBEDDINGS_PROVIDER as DEFAULT_EMBEDDINGS_PROVIDER,
-    LLM_PROVIDER as DEFAULT_LLM_PROVIDER,
-)
 
 
 @st.cache_resource(show_spinner="Loading selected language model...")
@@ -146,9 +149,9 @@ col_clear, col_spacer = st.columns([1, 5])
 with col_clear:
     if st.button("🗑️ Clear Vector DB", help="Clear the vector database and start fresh"):
         try:
-            if os.path.exists("./vector_db"):
+            if VECTOR_DB_DIR.exists():
                 # Use ignore_errors=True to force delete even if files are locked
-                shutil.rmtree("./vector_db", ignore_errors=True)
+                shutil.rmtree(VECTOR_DB_DIR, ignore_errors=True)
                 st.session_state.processed_uploads = set()
                 load_vector_store.clear()
                 st.success("✅ Vector database cleared! Restarting app...")
@@ -219,8 +222,8 @@ if uploaded_file:
     upload_digest = hashlib.sha256(uploaded_file.getvalue()).hexdigest()
     upload_id = f"{st.session_state.embeddings_provider}:{upload_digest}"
     if upload_id not in st.session_state.processed_uploads:
-        os.makedirs("data/uploads", exist_ok=True)
-        file_path = f"data/uploads/{uploaded_file.name}"
+        UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+        file_path = UPLOADS_DIR / os.path.basename(uploaded_file.name)
 
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())

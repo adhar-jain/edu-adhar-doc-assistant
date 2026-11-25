@@ -16,7 +16,10 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from llm.embeddings_factory import EmbeddingsFactory
-from utils.config import EMBEDDINGS_PROVIDER as DEFAULT_EMBEDDINGS_PROVIDER
+from utils.config import (
+    EMBEDDINGS_PROVIDER as DEFAULT_EMBEDDINGS_PROVIDER,
+    VECTOR_DB_DIR,
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,10 +33,11 @@ class VectorStoreManager:
         # Use embeddings factory instead of hardcoded provider
         embeddings = EmbeddingsFactory.get_embeddings()
 
+        VECTOR_DB_DIR.mkdir(parents=True, exist_ok=True)
         self.vectordb = Chroma(
             collection_name=f"enterprise_docs_{provider}",
             embedding_function=embeddings,
-            persist_directory="./vector_db"
+            persist_directory=str(VECTOR_DB_DIR)
         )
 
     def _chunk_id(self, doc):
